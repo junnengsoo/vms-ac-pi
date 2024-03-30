@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 import os
 
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 from updateserver import update_server_events
 import eventActionTriggerConstants
 import eventActionTriggers

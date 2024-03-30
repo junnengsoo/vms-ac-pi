@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 from var import server_url
 import json
 import requests

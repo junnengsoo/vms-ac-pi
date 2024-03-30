@@ -10,7 +10,7 @@ import threading
 from lock import config_lock
 
 from eventActionTriggerConstants import GEN_OUT_1
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 
 path = os.path.dirname(os.path.abspath(__file__))
 

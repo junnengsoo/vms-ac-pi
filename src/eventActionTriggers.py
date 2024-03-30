@@ -7,7 +7,7 @@ import os
 from eventActionTriggerConstants import *
 import relay
 from lock import pending_logs_lock
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 from var import server_url
 import gc
 

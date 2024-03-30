@@ -8,7 +8,7 @@ import healthcheck
 import eventsMod
 import gc
 import piProperty
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 
 '''
     1. main program that runs everything, including E1
