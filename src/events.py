@@ -431,6 +431,7 @@ def reader_detects_bits(bits, value, entrance):
         return False  # Default case, credential not added
 
     # credential_added means user input has ended
+    logger.info("bits={} value={}".format(bits, value))
     print("bits={} value={}".format(bits, value))
 
     credential_added = False
