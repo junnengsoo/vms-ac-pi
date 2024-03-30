@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from src.executor import thread_pool_executor
 from var import server_url
 import json
 import requests
@@ -22,8 +24,8 @@ def update_server_events():
 
     url = server_url + '/api/unicon/events'
     # Start the send_request_to_server function in a new thread
-    thread = threading.Thread(target=send_request_to_server, args=(url, data))
-    thread.start()
+
+    thread_pool_executor.submit(send_request_to_server, url, data)
     print("inside update_server_events ", str(datetime.now()))
 
     # The function returns immediately, while the thread continues to run

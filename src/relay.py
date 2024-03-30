@@ -10,6 +10,8 @@ import threading
 from lock import config_lock
 
 from eventActionTriggerConstants import GEN_OUT_1
+from src.executor import thread_pool_executor
+
 path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -245,8 +247,7 @@ def trigger_relay_one(thirdPartyOption=None):
         setupRelayPin(outputPin)
         print("opening")
         logger.info("Before toggleRelay1 thread")
-        threading.Thread(target=toggleRelay1, args=(outputPin,'High',
-                     5000, 1000,1)).start()
+        thread_pool_executor.submit(toggleRelay1, outputPin, 'High', 5000, 1000, 1)
 
         # cleanupGpio()
     except RuntimeError:

@@ -8,6 +8,7 @@ import healthcheck
 import eventsMod
 import gc
 import piProperty
+from src.executor import thread_pool_executor
 
 '''
     1. main program that runs everything, including E1
@@ -220,12 +221,8 @@ def memory_checker():
 
 update_config()
 
-print("threads starting")
-t1 = threading.Thread(target=check_events_timer)
-t2 = threading.Thread(target=mag_and_button)
-t3 = threading.Thread(target=check_gen_pins_and_alarm)
-t4 = threading.Thread(target=memory_checker)
-t1.start()
-t2.start()
-t3.start()
-t4.start()
+
+thread_pool_executor.submit(check_events_timer)
+thread_pool_executor.submit(mag_and_button)
+thread_pool_executor.submit(check_gen_pins_and_alarm)
+thread_pool_executor.submit(memory_checker)

@@ -1,13 +1,14 @@
 import json
 from datetime import datetime
 import os
-import threading
+
+from src.executor import thread_pool_executor
 from updateserver import update_server_events
 import eventActionTriggerConstants
 import eventActionTriggers
 from lock import pending_logs_lock, archived_logs_lock, config_lock
-from threading import Lock
 import logging
+
 # Create a logger
 logger = logging.getLogger(__name__)
 
@@ -187,15 +188,13 @@ def record_button_pressed(entrance, name_of_button):
     e = entrance
     if e == '':  # no entrance assigned to this push button
         e = eventActionTriggerConstants.BOTH_ENTRANCE
-    print(f"Recorded button pressed at {e}")
     logger.info("push button, before event_trigger_cb")
     eventActionTriggers.event_trigger_cb(
         eventActionTriggerConstants.create_event(
             eventActionTriggerConstants.EXIT_BUTTON_PRESSED, e)
     )
-    logger.info("push button, after event_trigger_cb")
+
     update_logs_and_server(dictionary)
-    logger.info("push button, after update_logs_and_server")
 
 # status = opened/ closed
 
@@ -321,16 +320,13 @@ def record_buzzer_end(entrance):
 
 def update_logs_and_server(dictionary):
     def thread_task():
-        print("before update logs", str(datetime.now()))
         update(path + "/json/archivedLogs.json", archived_logs_lock, dictionary)
         update(path + "/json/pendingLogs.json", pending_logs_lock, dictionary)
-        print("inside update_logs_and_server ", str(datetime.now()))
 
         update_server_events()
 
-    # create thread to implement the above 
-    thread = threading.Thread(target=thread_task)
-    thread.start()
+    # create thread to implement the above
+    thread_pool_executor.submit(thread_task)
 
 
 def update(file, lock, dictionary):
