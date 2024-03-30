@@ -244,6 +244,7 @@ def trigger_relay_one(thirdPartyOption=None):
         setGpioMode()
         setupRelayPin(outputPin)
         print("opening")
+        logger.info("Before toggleRelay1 thread")
         threading.Thread(target=toggleRelay1, args=(outputPin,'High',
                      5000, 1000,1)).start()
 
