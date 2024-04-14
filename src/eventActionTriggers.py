@@ -446,7 +446,8 @@ def check_for_only_timer_based_events():
         gc.collect()
 
 
-thread_pool_executor.submit(check_for_only_timer_based_events)
+# thread_pool_executor.submit(check_for_only_timer_based_events)
+threading.Thread(target=check_for_only_timer_based_events)
 
 
 # need to write all possible output
