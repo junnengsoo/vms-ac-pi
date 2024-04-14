@@ -402,4 +402,5 @@ def check_for_led_and_buzzer():
         gc.collect()
 
 
-thread_pool_executor.submit(check_for_led_and_buzzer)
+# thread_pool_executor.submit(check_for_led_and_buzzer)
+threading.Thread(target=check_for_led_and_buzzer)
