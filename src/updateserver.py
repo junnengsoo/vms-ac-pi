@@ -8,25 +8,38 @@ import os
 import threading
 
 from lock import pending_logs_lock
+import logging
+
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Set the level of logging. It can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler for outputting log messages to a file
+file_handler = logging.FileHandler('/home/etlas/UpdateServer.log')
+
+# Create a formatter and add it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(file_handler)
 
 path = os.path.dirname(os.path.abspath(__file__))
 
 
 def update_server_events():
-    print("inside update_server_events ", str(datetime.now()))
-    
-    print("outside pending logs lock ", str(datetime.now()))
     with pending_logs_lock:
-        print("inside pending logs lock ", str(datetime.now()))
         with open(path+"/json/pendingLogs.json", 'r') as file:
             data = json.load(file)
-        print("after pending logs lock ", str(datetime.now()))
 
     url = server_url + '/api/unicon/events'
+
+    logger.info("Update Server Events called")
     # Start the send_request_to_server function in a new thread
 
-    thread_pool_executor.submit(send_request_to_server, url, data)
-    print("inside update_server_events ", str(datetime.now()))
+    # thread_pool_executor.submit(send_request_to_server, url, data)
 
     # The function returns immediately, while the thread continues to run
 

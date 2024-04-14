@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Create a file handler for outputting log messages to a file
-file_handler = logging.FileHandler('/home/etlas/logfileventsMod.log')
+file_handler = logging.FileHandler('/home/etlas/EventsMod.log')
 
 # Create a formatter and add it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -326,7 +326,8 @@ def update_logs_and_server(dictionary):
         update_server_events()
 
     # create thread to implement the above
-    thread_pool_executor.submit(thread_task)
+    thread_task()
+    # thread_pool_executor.submit(thread_task)
 
 
 def update(file, lock, dictionary):
