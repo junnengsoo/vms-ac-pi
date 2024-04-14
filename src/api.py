@@ -221,7 +221,7 @@ def get_piProperty():
 
 @app.route('/api/exit', methods=['GET'])
 def exit_button_api():
-    data = button_detects_change(gpio)
+    data = button_detects_change(5)
     return flask.Response('', status=204)
 
 def display_top(snapshot, key_type='lineno', limit=10):
