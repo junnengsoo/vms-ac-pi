@@ -834,6 +834,8 @@ def button_detects_change(gpio, level, tick):
     if time.time() - button_detects_change.last_call_time < debounce_delay:
         return
 
+    print(gpio, "gpio")
+
     # handle button press
     if gpio == E1_Button:
         logger.info(f"{E1} push button1 is pressed at " + str(datetime.now()))
