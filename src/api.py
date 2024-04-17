@@ -21,6 +21,8 @@ import datetime
 import threading
 import time
 
+from src.executor import thread_pool_executor
+
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
 path = os.path.dirname(os.path.abspath(__file__))
@@ -223,7 +225,7 @@ def get_piProperty():
 
 @app.route('/api/exit', methods=['GET'])
 def exit_button_api():
-    data = button_detects_change(5)
+    data = events.button_detects_change(5)
     return flask.Response('', status=204)
 
 def display_top(snapshot, key_type='lineno', limit=10):
@@ -264,7 +266,6 @@ def log_memory_usage_every_hour():
         gc.collect()
 
 
-log_memory_usage_every_hour()
-
+thread_pool_executor.submit(log_memory_usage_every_hour)
 
 app.run(host='0.0.0.0',port=5000,debug = False)
