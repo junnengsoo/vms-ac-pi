@@ -1,3 +1,5 @@
+import gc
+
 import flask
 import healthcheck
 import json
@@ -233,7 +235,7 @@ def display_top(snapshot, key_type='lineno', limit=10):
 
     print("Top displayed")
 
-    with open('memory_usage.log', 'a') as f:
+    with open('/home/etlas/memory_usage.log', 'a') as f:
         print("Top %s lines" % limit, file=f)
         for index, stat in enumerate(top_stats[:limit], 1):
             frame = stat.traceback[0]
@@ -259,7 +261,10 @@ def log_memory_usage_every_hour():
         display_top(snapshot)
         print("Logging done")
         time.sleep(3600)  # wait for an hour
+        gc.collect()
+
 
 log_memory_usage_every_hour()
+
 
 app.run(host='0.0.0.0',port=5000,debug = False)

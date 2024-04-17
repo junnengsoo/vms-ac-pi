@@ -326,8 +326,8 @@ def update_logs_and_server(dictionary):
         update_server_events()
 
     # create thread to implement the above
-    thread_task()
-    # thread_pool_executor.submit(thread_task)
+    # thread_task()
+    thread_pool_executor.submit(thread_task)
 
 
 def update(file, lock, dictionary):

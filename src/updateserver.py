@@ -39,7 +39,7 @@ def update_server_events():
     logger.info("Update Server Events called")
     # Start the send_request_to_server function in a new thread
 
-    # thread_pool_executor.submit(send_request_to_server, url, data)
+    thread_pool_executor.submit(send_request_to_server, url, data)
 
     # The function returns immediately, while the thread continues to run
 
