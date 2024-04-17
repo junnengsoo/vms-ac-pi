@@ -21,7 +21,7 @@ import datetime
 import threading
 import time
 
-from src.executor import thread_pool_executor
+from executor import thread_pool_executor
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
