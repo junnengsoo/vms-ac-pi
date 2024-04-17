@@ -826,7 +826,7 @@ def mag_detects_falling(gpio, level, tick):
 mag_detects_falling.last_call_time = 0
 
 
-def button_detects_change(gpio):
+def button_detects_change(gpio, level, tick):
     global mag_E1_allowed_to_open
     global mag_E2_allowed_to_open
 
