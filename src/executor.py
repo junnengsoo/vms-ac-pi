@@ -37,22 +37,22 @@ class ThreadPoolMonitor:
         with self.lock:
             self.submitted_tasks += 1
             self.active_tasks += 1
-        logging.info("Task submitted. Total submitted: {}".format(self.submitted_tasks))
+        logger.info("Task submitted. Total submitted: {}".format(self.submitted_tasks))
         future = self.executor.submit(self._run, func, *args, **kwargs)
         future.add_done_callback(self._task_complete)
         return future
 
     def _run(self, func, *args, **kwargs):
-        logging.info("Thread started running a task.")
+        logger.info("Thread started running a task.")
         result = func(*args, **kwargs)
-        logging.info("Thread completed running a task.")
+        logger.info("Thread completed running a task.")
         return result
 
     def _task_complete(self, future):
         with self.lock:
             self.active_tasks -= 1
             self.completed_tasks += 1
-        logging.info("Task completed. Total completed: {}".format(self.completed_tasks))
+        logger.info("Task completed. Total completed: {}".format(self.completed_tasks))
 
     def get_queue_length(self):
         with self.lock:
@@ -61,12 +61,12 @@ class ThreadPoolMonitor:
     def _monitor_queue_length(self):
         while True:
             queue_length = self.get_queue_length()
-            logging.info(f"Current queue length: {queue_length}")
+            logger.info(f"Current queue length: {queue_length}")
             time.sleep(60*30)  # Interval between logs can be adjusted
             gc.collect()
 
     def shutdown(self, wait=True):
-        logging.info("Shutting down thread pool.")
+        logger.info("Shutting down thread pool.")
         self.executor.shutdown(wait=wait)
 
 
