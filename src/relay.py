@@ -284,6 +284,11 @@ def trigger_relay_two(thirdPartyOption=None):
 
 @multitasking.task
 def lock_unlock_entrance_one(thirdPartyOption=None, unlock=False):
+    print("lock_unlock_entrance_one called")
+    # Get current thread object
+    current_thread = threading.current_thread()
+    # Print the current thread's name or ID
+    print(f"lock_unlock_entrance_one called by thread: {current_thread.name}")
 
     outputPin = Relay_1
     if thirdPartyOption == "GEN_OUT_1":

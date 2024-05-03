@@ -228,7 +228,7 @@ def exit_button_api():
     data = events.button_detects_change(5, "", "")
     return flask.Response('', status=204)
 
-def display_top(snapshot, key_type='lineno', limit=10):
+def display_top(snapshot, key_type='traceback', limit=10):
     snapshot = snapshot.filter_traces((
         tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
         tracemalloc.Filter(False, "<unknown>"),
@@ -236,16 +236,15 @@ def display_top(snapshot, key_type='lineno', limit=10):
     top_stats = snapshot.statistics(key_type)
 
     print("Top displayed")
-
     with open('/home/etlas/memory_usage.log', 'a') as f:
-        print("Top %s lines" % limit, file=f)
+        print("Top %s tracebacks" % limit, file=f)
         for index, stat in enumerate(top_stats[:limit], 1):
-            frame = stat.traceback[0]
-            print("#%s: %s:%s: %.1f KiB"
-                  % (index, frame.filename, frame.lineno, stat.size / 1024), file=f)
-            line = linecache.getline(frame.filename, frame.lineno).strip()
-            if line:
-                print('    %s' % line, file=f)
+            print("#%s: %.1f KiB" % (index, stat.size / 1024), file=f)
+            for frame in stat.traceback:
+                # Extract line from the source file
+                line = linecache.getline(frame.filename, frame.lineno).strip()
+                print("    File \"%s\", line %s, in %s" % (frame.filename, frame.lineno, line), file=f)
+            print("\n", file=f)
 
         other = top_stats[limit:]
         if other:
@@ -255,15 +254,14 @@ def display_top(snapshot, key_type='lineno', limit=10):
         print("Total allocated size: %.1f KiB" % (total / 1024), file=f)
 
 def log_memory_usage_every_hour():
-    tracemalloc.start()
-    print("Logging memory usage every hour")
-    while True:
-        snapshot = tracemalloc.take_snapshot()
-        print("Snapshot done")
-        display_top(snapshot)
-        print("Logging done")
-        time.sleep(3600)  # wait for an hour
-        gc.collect()
+    tracemalloc.start(25)  # Adjust stack depth as needed
+    try:
+        while True:  # Modify or remove loop as per your use case
+            snapshot = tracemalloc.take_snapshot()
+            display_top(snapshot)
+            time.sleep(300)  # Adjust time or trigger as needed
+    finally:
+        tracemalloc.stop()
 
 
 thread_pool_executor.submit(log_memory_usage_every_hour)

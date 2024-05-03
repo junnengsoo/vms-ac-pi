@@ -139,8 +139,6 @@ def pin_only_used(entrance, status):
     logger.info("record pin used, after event_trigger_cb")
     update_logs_and_server(dictionary)
     logger.info("record pin used, after update_logs_and_server")
-# updates pendingLogs.json and send to backend
-# updates archivedLogs.json for backup
 
 
 def record_masterpassword_used(authtype, entrance, status):
