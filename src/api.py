@@ -259,7 +259,7 @@ def log_memory_usage_every_hour():
         while True:  # Modify or remove loop as per your use case
             snapshot = tracemalloc.take_snapshot()
             display_top(snapshot)
-            time.sleep(300)  # Adjust time or trigger as needed
+            time.sleep(3600)  # Adjust time or trigger as needed
     finally:
         tracemalloc.stop()
 
