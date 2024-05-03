@@ -101,6 +101,7 @@ def setRelayPinLow(relayPin):
 
 
 def activateRelay(relayPin, activateLevel):
+    print("activateRelay")
     if activateLevel == 'High':
         setRelayPinHigh(relayPin)
     else:
