@@ -281,8 +281,6 @@ def trigger_relay_two(thirdPartyOption=None):
         print("Entrance is still opened")
     return
 
-
-@multitasking.task
 def lock_unlock_entrance_one(thirdPartyOption=None, unlock=False):
     print("lock_unlock_entrance_one called")
     # Get current thread object
@@ -330,8 +328,6 @@ def lock_unlock_entrance_one(thirdPartyOption=None, unlock=False):
     # print("test")
     return
 
-
-@multitasking.task
 def lock_unlock_entrance_two(thirdPartyOption=None, unlock=False):
 
     outputPin = Relay_2
