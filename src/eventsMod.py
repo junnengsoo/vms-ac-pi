@@ -1,12 +1,29 @@
 import json
 from datetime import datetime
 import os
+
+from executor import thread_pool_executor
 from updateserver import update_server_events
 import eventActionTriggerConstants
 import eventActionTriggers
 from lock import pending_logs_lock, archived_logs_lock, config_lock
-from threading import Lock
+import logging
 
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Set the level of logging. It can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler for outputting log messages to a file
+file_handler = logging.FileHandler('/home/etlas/EventsMod.log')
+
+# Create a formatter and add it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(file_handler)
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -80,12 +97,15 @@ def record_auth_scans(name, accessGroup, authtype, entrance, status):
         "controller": {"controllerSerialNo": controllerSerial},
         "eventTime": datetime.now().strftime(("%m-%d-%Y %H:%M:%S"))
     }
+
+    logger.info("record auth scans, before event_trigger_cb")
     eventActionTriggers.event_trigger_cb(
         eventActionTriggerConstants.create_event(
             eventActionTriggerConstants.AUTHENTICATED_SCAN, entrance)
     )
-
+    logger.info("record auth scans, after event_trigger_cb")
     update_logs_and_server(dictionary)
+    logger.info("record auth scans, after update_logs_and_server")
 
 def invalid_pin_used(entrance, status):
     dictionary = {
@@ -111,15 +131,14 @@ def pin_only_used(entrance, status):
         "controller": {"controllerSerialNo": controllerSerial},
         "eventTime": datetime.now().strftime(("%m-%d-%Y %H:%M:%S"))
     }
+    logger.info("record pin used, before event_trigger_cb")
     eventActionTriggers.event_trigger_cb(
         eventActionTriggerConstants.create_event(
             eventActionTriggerConstants.AUTHENTICATED_SCAN, entrance)
     )
-
+    logger.info("record pin used, after event_trigger_cb")
     update_logs_and_server(dictionary)
-
-# updates pendingLogs.json and send to backend
-# updates archivedLogs.json for backup
+    logger.info("record pin used, after update_logs_and_server")
 
 
 def record_masterpassword_used(authtype, entrance, status):
@@ -167,12 +186,14 @@ def record_button_pressed(entrance, name_of_button):
     e = entrance
     if e == '':  # no entrance assigned to this push button
         e = eventActionTriggerConstants.BOTH_ENTRANCE
-    print(f"Recorded button pressed at {e}")
+    logger.info("push button, before event_trigger_cb")
     eventActionTriggers.event_trigger_cb(
         eventActionTriggerConstants.create_event(
             eventActionTriggerConstants.EXIT_BUTTON_PRESSED, e)
     )
+
     update_logs_and_server(dictionary)
+
 # status = opened/ closed
 
 def fire_alarm_activated(gpio, level, tick):
@@ -296,14 +317,22 @@ def record_buzzer_end(entrance):
 
 
 def update_logs_and_server(dictionary):
-    update(path + "/json/archivedLogs.json", archived_logs_lock, dictionary)
-    update(path + "/json/pendingLogs.json", pending_logs_lock, dictionary)
-    update_server_events()
+    def thread_task():
+        update(path + "/json/archivedLogs.json", archived_logs_lock, dictionary)
+        update(path + "/json/pendingLogs.json", pending_logs_lock, dictionary)
+
+        update_server_events()
+
+    # create thread to implement the above
+    # thread_task()
+    thread_pool_executor.submit(thread_task)
 
 
 def update(file, lock, dictionary):
     # check if current json files exceed max length
     clear_file_storage(file, lock)
+    print("before lock", str(datetime.now()))
+
     with lock:
         with open(file, "r+") as outfile:
             try:
@@ -311,11 +340,16 @@ def update(file, lock, dictionary):
             except:
                 data = []
 
+            print("before dict append", str(datetime.now()))
+
             data.append(dictionary)
             outfile.seek(0)
+            print("after dict append", str(datetime.now()))
 
             json.dump(data, outfile, indent=4)
     outfile.close()
+    print("after lock", str(datetime.now()))
+
 
 
 # delete first half if exceeds length

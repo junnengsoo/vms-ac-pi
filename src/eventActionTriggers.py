@@ -7,6 +7,7 @@ import os
 from eventActionTriggerConstants import *
 import relay
 from lock import pending_logs_lock
+from executor import thread_pool_executor
 from var import server_url
 import gc
 
@@ -445,8 +446,9 @@ def check_for_only_timer_based_events():
         gc.collect()
 
 
-t1 = threading.Thread(target=check_for_only_timer_based_events)
-t1.start()
+thread_pool_executor.submit(check_for_only_timer_based_events)
+# threading.Thread(target=check_for_only_timer_based_events)
+
 
 # need to write all possible output
 # write dynamic input functions to check if true or false

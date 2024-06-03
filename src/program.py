@@ -7,6 +7,8 @@ import eventsMod
 import healthcheck
 import eventsMod
 import gc
+import piProperty
+from executor import thread_pool_executor
 
 '''
     1. main program that runs everything, including E1
@@ -95,23 +97,23 @@ def check_events_for(entrance):
         if timeout_buzzer.check(BUZZER_TIMEOUT):
             print("email")
 
-    if timeout_mag.status():
-        if timeout_mag.check(MAG_TIMEOUT):
-            GPIOconfig.activate_buzz_led(entrance[:2])
+    # if timeout_mag.status():
+    #     if timeout_mag.check(MAG_TIMEOUT):
+    #         GPIOconfig.activate_buzz_led(entrance[:2])
 
-            if not timeout_buzzer.status():
-                timeout_buzzer.start()
-                print("Buzzer started buzzing")
-                eventsMod.record_buzzer_start(entrancename)
-                events.updateserver.update_server_events()
+    #         if not timeout_buzzer.status():
+    #             timeout_buzzer.start()
+    #             print("Buzzer started buzzing")
+    #             eventsMod.record_buzzer_start(entrancename)
+    #             events.updateserver.update_server_events()
 
                 
-    else:
-        GPIOconfig.deactivate_buzz_led(entrance[:2])
-        if timeout_buzzer.status():
-            timeout_buzzer.stop()
-            print("Buzzer stopped buzzing")
-            eventsMod.record_buzzer_end(entrancename)
+    # else:
+    #     GPIOconfig.deactivate_buzz_led(entrance[:2])
+    #     if timeout_buzzer.status():
+    #         timeout_buzzer.stop()
+    #         print("Buzzer stopped buzzing")
+    #         eventsMod.record_buzzer_end(entrancename)
 
     events.time.sleep(0.1)
 
@@ -213,12 +215,22 @@ it adds an addtion detect_bits call, so multiple detect_bits are called after ca
                                 GPIOconfig.E2_OUT_D1, events.reader_detects_bits, "E2_OUT")
 
 
+def memory_checker():
+    piProperty.log_system_stats(1*60*10, 1*60*60*24*5)
+
+
 update_config()
 
-print("threads starting")
-t1 = threading.Thread(target=check_events_timer)
-t2 = threading.Thread(target=mag_and_button)
-t3 = threading.Thread(target=check_gen_pins_and_alarm)
-t1.start()
-t2.start()
-t3.start()
+
+thread_pool_executor.submit(check_events_timer)
+thread_pool_executor.submit(mag_and_button)
+thread_pool_executor.submit(check_gen_pins_and_alarm)
+thread_pool_executor.submit(memory_checker)
+# t1 = threading.Thread(target=check_events_timer)
+# t2 = threading.Thread(target=mag_and_button)
+# t3 = threading.Thread(target=check_gen_pins_and_alarm)
+# t4 = threading.Thread(target=memory_checker)
+# t1.start()
+# t2.start()
+# t3.start()
+# t4.start()

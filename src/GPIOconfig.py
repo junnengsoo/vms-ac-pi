@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 import gc
 from lock import config_lock
+from executor import thread_pool_executor
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -400,6 +401,6 @@ def check_for_led_and_buzzer():
         time.sleep(1)
         gc.collect()
 
-t1=threading.Thread(target=check_for_led_and_buzzer)
-t1.start()
 
+thread_pool_executor.submit(check_for_led_and_buzzer)
+# threading.Thread(target=check_for_led_and_buzzer)

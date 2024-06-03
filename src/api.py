@@ -1,3 +1,5 @@
+import gc
+
 import flask
 import healthcheck
 import json
@@ -13,6 +15,13 @@ import eventActionTriggers
 import piProperty
 import program
 from lock import config_lock
+import tracemalloc
+import linecache
+import datetime
+import threading
+import time
+
+from executor import thread_pool_executor
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -213,5 +222,48 @@ def post_eventActionTriggers():
 def get_piProperty():
     data = piProperty.get_system_stats()
     return flask.Response(json.dumps(data), headers={ 'Content-type': 'application/json' }, status=200)
+
+@app.route('/api/exit', methods=['GET'])
+def exit_button_api():
+    data = events.button_detects_change(5, "", "")
+    return flask.Response('', status=204)
+
+def display_top(snapshot, key_type='traceback', limit=10):
+    snapshot = snapshot.filter_traces((
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+        tracemalloc.Filter(False, "<unknown>"),
+    ))
+    top_stats = snapshot.statistics(key_type)
+
+    print("Top displayed")
+    with open('/home/etlas/memory_usage.log', 'a') as f:
+        print("Top %s tracebacks" % limit, file=f)
+        for index, stat in enumerate(top_stats[:limit], 1):
+            print("#%s: %.1f KiB" % (index, stat.size / 1024), file=f)
+            for frame in stat.traceback:
+                # Extract line from the source file
+                line = linecache.getline(frame.filename, frame.lineno).strip()
+                print("    File \"%s\", line %s, in %s" % (frame.filename, frame.lineno, line), file=f)
+            print("\n", file=f)
+
+        other = top_stats[limit:]
+        if other:
+            size = sum(stat.size for stat in other)
+            print("%s other: %.1f KiB" % (len(other), size / 1024), file=f)
+        total = sum(stat.size for stat in top_stats)
+        print("Total allocated size: %.1f KiB" % (total / 1024), file=f)
+
+def log_memory_usage_every_hour():
+    tracemalloc.start(25)  # Adjust stack depth as needed
+    try:
+        while True:  # Modify or remove loop as per your use case
+            snapshot = tracemalloc.take_snapshot()
+            display_top(snapshot)
+            time.sleep(3600)  # Adjust time or trigger as needed
+    finally:
+        tracemalloc.stop()
+
+
+thread_pool_executor.submit(log_memory_usage_every_hour)
 
 app.run(host='0.0.0.0',port=5000,debug = False)

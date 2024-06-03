@@ -1,3 +1,5 @@
+import logging
+
 import RPi.GPIO as GPIO
 from time import sleep
 from datetime import datetime
@@ -8,8 +10,26 @@ import threading
 from lock import config_lock
 
 from eventActionTriggerConstants import GEN_OUT_1
+from executor import thread_pool_executor
+
 path = os.path.dirname(os.path.abspath(__file__))
 
+
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Set the level of logging. It can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler for outputting log messages to a file
+file_handler = logging.FileHandler('/home/etlas/Relay.log')
+
+# Create a formatter and add it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(file_handler)
 
 # everytime relay triggers, mag_status_open = True
 # if mag_contact opened but mag_status_open = False, TRIGGER ALARM
@@ -81,6 +101,7 @@ def setRelayPinLow(relayPin):
 
 
 def activateRelay(relayPin, activateLevel):
+    print("activateRelay", activateLevel, relayPin)
     if activateLevel == 'High':
         setRelayPinHigh(relayPin)
     else:
@@ -99,12 +120,14 @@ def deActivateRelay(relayPin, activateLevel):
 def toggleRelay1(relayPin, activateLevel, activateMilliSeconds, deActivateMilliSeconds, toggleCount):
     
     global E1_opened
-    print("Door 1 currently opened", E1_opened)
+    logger.info("Trigger toggleRelay 1, E1_opened: %s", E1_opened)
     if not E1_opened:
+        # print timing before gpio set up
         setGpioMode()
         setupRelayPin(relayPin)
+
         for i in range(toggleCount):
-            print("togglerelay1 activate")
+            logger.info("toggleRelay1 Activated")
             activateRelay(relayPin, activateLevel)
 
             E1_opened = True
@@ -113,7 +136,7 @@ def toggleRelay1(relayPin, activateLevel, activateMilliSeconds, deActivateMilliS
         if E1_perm_opened:
             pass
         else:
-            print("togglerelay1 DEactivate")
+            logger.info("toggleRelay1 Deactivated")
             E1_opened = False
             deActivateRelay(relayPin, activateLevel)
             sleep(deActivateMilliSeconds / 1000)
@@ -123,12 +146,11 @@ def toggleRelay1(relayPin, activateLevel, activateMilliSeconds, deActivateMilliS
 
 def toggleRelay2(relayPin, activateLevel, activateMilliSeconds, deActivateMilliSeconds, toggleCount):
     global E2_opened
-    print("Door 2 currently opened", E2_opened)
+    logger.info("Trigger toggleRelay 2, E2_opened: %s", E2_opened)
     if not E2_opened:
         setGpioMode()
         setupRelayPin(relayPin)
         for i in range(toggleCount):
-            print("togglerelay2 activate")
             activateRelay(relayPin, activateLevel)
 
             E2_opened = True
@@ -137,7 +159,6 @@ def toggleRelay2(relayPin, activateLevel, activateMilliSeconds, deActivateMilliS
         if E2_perm_opened:
             pass
         else:
-            print("togglerelay2 DEactivate")
             E2_opened = False
             deActivateRelay(relayPin, activateLevel)
             sleep(deActivateMilliSeconds / 1000)
@@ -156,7 +177,6 @@ def toggleRelayGen(relayPin, activateLevel, activateMilliSeconds, GenNo):
         GEN_2_OPEN = True
     elif (GenNo == 3):
         GEN_3_OPEN = True
-    print(f"activate gen {GenNo} for {activateMilliSeconds} seconds")
     sleep(activateMilliSeconds)
     deActivateRelay(relayPin, activateLevel)
     if (GenNo == 1):
@@ -167,7 +187,6 @@ def toggleRelayGen(relayPin, activateLevel, activateMilliSeconds, GenNo):
         GEN_3_OPEN = False
     while (GEN_1_OPEN or GEN_2_OPEN or GEN_3_OPEN or E1_opened or E2_opened):
         sleep(1)
-    print(f"deactivate gen {GenNo}")
     return
 # *** Tests ***
 
@@ -208,9 +227,7 @@ def toggleRelayGen(relayPin, activateLevel, activateMilliSeconds, GenNo):
 #     return
 
 
-@multitasking.task
 def trigger_relay_one(thirdPartyOption=None):
-
     outputPin = Relay_1
 
     if thirdPartyOption == "GEN_OUT_1":
@@ -225,13 +242,14 @@ def trigger_relay_one(thirdPartyOption=None):
         outputPin = GEN_OUT_3
         # print(thirdPartyOption,outputPin)
 
-    # print(" EM 1 unlocked at " + str(datetime.now()))
+    print(" EM 1 unlocked at " + str(datetime.now()))
     try:
         setGpioMode()
         setupRelayPin(outputPin)
         print("opening")
-        threading.Thread(target=toggleRelay1, args=(outputPin,'High',
-                     5000, 1000,1)).start()
+        logger.info("Before toggleRelay1")
+        # toggleRelay1(outputPin, 'High', 5000, 1000, 1)
+        thread_pool_executor.submit(toggleRelay1, outputPin, 'High', 5000, 1000, 1)
 
         # cleanupGpio()
     except RuntimeError:
@@ -240,7 +258,6 @@ def trigger_relay_one(thirdPartyOption=None):
     return
 
 
-@multitasking.task
 def trigger_relay_two(thirdPartyOption=None):
 
     outputPin = Relay_2
@@ -265,10 +282,7 @@ def trigger_relay_two(thirdPartyOption=None):
         print("Entrance is still opened")
     return
 
-
-@multitasking.task
 def lock_unlock_entrance_one(thirdPartyOption=None, unlock=False):
-
     outputPin = Relay_1
     if thirdPartyOption == "GEN_OUT_1":
         outputPin = GEN_OUT_1
@@ -309,8 +323,6 @@ def lock_unlock_entrance_one(thirdPartyOption=None, unlock=False):
     # print("test")
     return
 
-
-@multitasking.task
 def lock_unlock_entrance_two(thirdPartyOption=None, unlock=False):
 
     outputPin = Relay_2
