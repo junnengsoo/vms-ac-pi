@@ -778,9 +778,11 @@ def mag_detects_rising(gpio, level, tick):
     if time.time() - mag_detects_rising.last_call_time < debounce_delay:
         return
 
+    print(f"{gpio} Mag opened")
+
     if gpio == E1_Mag:
         timeout_mag_E1.start()
-        print(f"{E1} is opened at " + str(datetime.now()))
+        print(f"{E1} Mag is opened at " + str(datetime.now()))
         if mag_E1_allowed_to_open:
             eventsMod.record_mag_opened(E1)
         else:
@@ -803,6 +805,8 @@ mag_detects_rising.last_call_time = 0
 def mag_detects_falling(gpio, level, tick):
     global mag_E1_allowed_to_open
     global mag_E2_allowed_to_open
+
+    print(f"{gpio} Mag closed")
 
     if time.time() - mag_detects_falling.last_call_time < debounce_delay:
         return
